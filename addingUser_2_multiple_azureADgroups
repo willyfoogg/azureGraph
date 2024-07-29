@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# ID del usuario
+userObjectId="xxxx-xxx-xxxx-xxxx-xx"
+
+# Lista de nombres de los grupos
+groupNames=(
+  
+    "GROUP1"
+    "GROUP2"
+    
+)
+
+# Añadir el usuario a cada grupo usando el nombre del grupo
+for groupName in "${groupNames[@]}"
+do
+    # Obtener el ID del grupo a partir del nombre del grupo
+    groupId=$(az ad group show --group "$groupName" --query id --output tsv)
+    
+    if [ -n "$groupId" ]; then
+        # Verificar si el usuario ya es miembro del grupo
+        isMember=$(az ad group member check --group "$groupId" --member-id "$userObjectId" --query "value" --output tsv)
+        
+        if [ "$isMember" == "true" ]; then
+            echo "El usuario ya es miembro del grupo $groupName."
+        else
+            # Añadir el usuario al grupo
+            az ad group member add --group $groupId --member-id $userObjectId
+            if [ $? -eq 0 ]; then
+                echo "Usuario añadido al grupo $groupName con éxito."
+            else
+                echo "Error al añadir el usuario al grupo $groupName."
+            fi
+        fi
+    else
+        echo "No se encontró el grupo con nombre $groupName."
+    fi
+done
