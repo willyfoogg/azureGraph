@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Lista de nombres de usuarios
+userNames=(
+"user1@user.com"
+"user2@user.com"
+"user3@user.com"
+"user4@user.com"
+"user5@user.com"
+
+)
+
+Microsoft_Graph_API_version="v1.0"
+
+# Iterar sobre cada nombre de usuario y obtener el userObjectId
+for userName in "${userNames[@]}"
+do
+  user_id=$(az rest --method GET --uri "https://graph.microsoft.com/${Microsoft_Graph_API_version}/users/$( echo $userName | sed -e 's/#/%23/g' )?\$select=id" --query "{id:id}" --output tsv)
+  if [ -n "$user_id" ]; then
+    echo "El ID del usuario $userName es: $user_id"
+  else
+    echo "No se encontró el usuario con nombre $userName."
+  fi
+done
