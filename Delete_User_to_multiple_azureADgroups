@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# ID del usuario
+userObjectId="xxxxxxx-xxxxx-xxxxxx"
+
+# Lista de nombres de los grupos
+groupNames=(
+  
+"group-xxxxxxx"
+"group-xxxxxxx"
+"group-xxxxxxx"
+
+
+)
+
+# Eliminar el usuario de cada grupo usando el nombre del grupo
+for groupName in "${groupNames[@]}"
+do
+    # Obtener el ID del grupo a partir del nombre del grupo
+    groupId=$(az ad group show --group "$groupName" --query id --output tsv)
+    
+    if [ -n "$groupId" ]; then
+        # Verificar si el usuario es miembro del grupo
+        isMember=$(az ad group member check --group "$groupId" --member-id "$userObjectId" --query "value" --output tsv)
+        
+        if [ "$isMember" == "true" ]; then
+            # Eliminar el usuario del grupo
+            az ad group member remove --group $groupId --member-id $userObjectId
+            if [ $? -eq 0 ]; then
+                echo "Usuario eliminado del grupo $groupName con éxito."
+            else
+                echo "Error al eliminar el usuario del grupo $groupName."
+            fi
+        else
+            echo "El usuario no es miembro del grupo $groupName."
+        fi
+    else
+        echo "No se encontró el grupo con nombre $groupName."
+    fi
+done
