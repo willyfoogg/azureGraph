@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Lista de IDs de usuarios
+userObjectIds=(  # ← corregido: "userObjectIds" en vez de "userObjectId"
+  "371548ec-3a85-4880-aa7f-8021e84cce0a"
+  "64689bf0-dab9-4ea5-b7d1-dc0a23910bb7"
+  ...
+)
+
+# Lista de nombres de los grupos
+groupNames=(
+  "GAWS-ATENEA-MAPFREBR-DATACONSUMER"
+)
+
+# Iterar sobre cada grupo
+for groupName in "${groupNames[@]}"; do
+  groupId=$(az ad group show --group "$groupName" --query id --output tsv)
+
+  if [ -n "$groupId" ]; then
+    # Iterar sobre cada usuario
+    for userId in "${userObjectIds[@]}"; do
+      # Verificar si el usuario es miembro del grupo
+      isMember=$(az ad group member check --group "$groupId" --member-id "$userId" --query "value" --output tsv 2>/dev/null)
+      
+      if [ "$isMember" == "true" ]; then
+        # Eliminar el usuario del grupo
+        az ad group member remove --group "$groupId" --member-id "$userId"
+        if [ $? -eq 0 ]; then
+          echo "OK Usuario $userId eliminado del grupo $groupName."
+        else
+          echo "NOK Error al eliminar el usuario $userId del grupo $groupName."
+        fi
+      else
+        echo "!! El usuario $userId no es miembro del grupo $groupName."
+      fi
+    done
+  else
+    echo "!!!!! No se encontró el grupo con nombre $groupName."
+  fi
+done
