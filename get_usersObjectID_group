@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Lista de nombres de los grupos de Azure AD
+groupNames=(
+  "grupo-xxxxx-xxxx"
+  "grupo-yyyyy-yyyy"
+  "grupo-zzzzz-zzzz"
+)
+
+# Iterar sobre cada grupo
+for groupName in "${groupNames[@]}"; do
+  # Obtener el ID del grupo
+  groupId=$(az ad group show --group "$groupName" --query id --output tsv 2>/dev/null)
+
+  if [ -n "$groupId" ]; then
+    # Obtener todos los miembros del grupo y extraer sus IDs
+    az ad group member list --group "$groupId" --query "[].id" --output tsv
+  else
+    echo "No se encontró el grupo: $groupName" >&2
+  fi
+done
